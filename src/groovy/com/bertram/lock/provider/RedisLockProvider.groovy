@@ -27,10 +27,10 @@ class RedisLockProvider extends LockProvider {
 		try {
 			while (timeout > 0) {
 				if (getRedisService().setnx(buildKey(name, ns), now as String) == 1) {
-					def expires = args?.expires == null ? this.expireTimeout : args.expires
+					def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 					if (expires != 0)
-						getRedisService().expire(buildKey(name, ns), ((args?.expires ?: this.expireTimeout) / 1000) as Integer)
+						getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
 
 					return true
 					break
@@ -78,7 +78,11 @@ class RedisLockProvider extends LockProvider {
 	Boolean renewLock(String name, Map args = null) {
 		def ns = args?.namespace
 		try {
-			getRedisService().expire(buildKey(name, ns), (args.expires / 1000) as Integer)
+			def expires = args?.ttl == null ? this.expireTimeout : args.ttl
+			if (expires > 0)
+				getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
+			else
+				getRedisService().persist(buildKey(name, ns))
 		}
 		catch (Throwable t) {
 			log.error("Unable to renew lock ${name}: ${t.message}", t)
