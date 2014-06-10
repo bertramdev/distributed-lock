@@ -50,6 +50,7 @@ environments {
 			}
 			raiseError = true
 			defaultTimeout = 10000l
+			// namespace = 'my.locking.namespace' // USE: if you want a different namespace than the default for your lock keys
 		}
 	}
 	test {

@@ -32,4 +32,19 @@ class LockServiceIntegrationSpec extends Specification {
 	    lockService.releaseLock('lock2')
 
     }
+
+	void "test getting all active locks"() {
+		when:
+		def lock1 = lockService.acquireLock('lock101')
+		def lock2 = lockService.acquireLock('lock102')
+
+		then:
+		lock1
+		lock2
+		lockService.locks.size() == 2
+
+		cleanup:
+		lockService.releaseLock('lock101')
+		lockService.releaseLock('lock102')
+	}
 }

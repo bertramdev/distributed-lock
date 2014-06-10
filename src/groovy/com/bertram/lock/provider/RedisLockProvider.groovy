@@ -22,14 +22,15 @@ class RedisLockProvider extends LockProvider {
 		def locked = false
 		def timeout = args?.timeout ?: this.acquireTimeout
 		def now = System.currentTimeMillis()
+		def ns = args?.namespace
 
 		try {
 			while (timeout > 0) {
-				if (getRedisService().setnx(buildKey(name), now as String) == 1) {
+				if (getRedisService().setnx(buildKey(name, ns), now as String) == 1) {
 					def expires = args?.expires == null ? this.expireTimeout : args.expires
 
 					if (expires != 0)
-						getRedisService().expire(buildKey(name), ((args?.expires ?: this.expireTimeout) / 1000) as Integer)
+						getRedisService().expire(buildKey(name, ns), ((args?.expires ?: this.expireTimeout) / 1000) as Integer)
 
 					return true
 					break
@@ -57,8 +58,9 @@ class RedisLockProvider extends LockProvider {
 	 * @return
 	 */
 	Boolean releaseLock(String name, Map args = null) {
+		def ns = args?.namespace
 		try {
-			getRedisService().del(buildKey(name))
+			getRedisService().del(buildKey(name, ns))
 		}
 		catch(Throwable t) {
 			log.error("Unable to release lock ${name}: ${t.message}", t)
@@ -74,8 +76,9 @@ class RedisLockProvider extends LockProvider {
 	 * @return
 	 */
 	Boolean renewLock(String name, Map args = null) {
+		def ns = args?.namespace
 		try {
-			getRedisService().expire(buildKey(name), (args.expires / 1000) as Integer)
+			getRedisService().expire(buildKey(name, ns), (args.expires / 1000) as Integer)
 		}
 		catch (Throwable t) {
 			log.error("Unable to renew lock ${name}: ${t.message}", t)
@@ -90,7 +93,7 @@ class RedisLockProvider extends LockProvider {
 	 */
 	Set getLocks() {
 		try {
-			return getRedisService().keys("${nameSpace}.*")
+			return getRedisService().keys("${namespace}.*")
 		}
 		catch (Throwable t) {
 			log.error("Unable to get active locks: ${t.message}", t)
