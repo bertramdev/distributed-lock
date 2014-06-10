@@ -126,6 +126,7 @@ distributedLock {
 	}
 	raiseError = true
 	defaultTimeout = 10000l
+	namespace = 'example-app'
 }
 
 grails {

@@ -54,7 +54,7 @@ class LockService implements GroovyInterceptable {
 		}
 		else {
 			log.error("${domainInstance.class.name} is not a valid domain class")
-			if ((params?.raiseError != null ? params.raiseError : delegate.raiseError))
+			if ((params?.raiseError != null ? params.raiseError : providerDelegate.raiseError))
 				throw new RuntimeException("Unable to acquire lock for instance of ${domainInstance.class.name}: It is not a valid domain class")
 			else
 				return false
@@ -168,7 +168,7 @@ class LockService implements GroovyInterceptable {
 	 * @return
 	 */
 	private Boolean isDomain(instance) {
-		def gc = grailsApplication.getArtefact('Domain', instance.class.getSimpleName())
+		def gc = grailsApplication.getArtefact('Domain', instance.class.name)
 		return (gc ? true : false)
 	}
 
