@@ -134,6 +134,10 @@ Threaded sample using [executor][executor] plugin:
 		}
 	}
 	
+Extending/Contributing
+----------------------
+To add additional providers is simple.  Simply extend the abstract __com.bertram.lock.LockProvider__ class and implement its abstract methods.  Once the new provider is implemented, it must be added to the __LockServiceConfigurer__ configuration method.  Please submit contributions via pull request.
+	
 [redis]: http://redis.io
 [grails-redis]: http://grails.org/plugin/redis
 [riak]: http://basho.com/riak
