@@ -15,38 +15,41 @@ Things to be Done
 Installation
 ------------
 Add the plugin to your __BuildConfig.groovy__:
-
-	plugins {
-        compile ":distributed-lock:0.1.0"
-    }
-    
+```java
+plugins {
+	compile ":distributed-lock:0.1.0"
+}
+```
 Configuration
 -------------
 First thing is to configure your redis store.  Add sample config to your __Config.groovy__:
 
-	grails {
-		redis {
-			host = 'localhost'
-			port = 6379
-		}
+```java
+grails {
+	redis {
+		host = 'localhost'
+		port = 6379
 	}
-	
+}
+```
 __NOTE:__ Please see [grails-redis][grails-redis] for more configuration details for your redis store
 
 Next, configure your __distributed-lock__ options:
 
-	distributedLock {
-		provider {
-			type = RedisLockProvider // Currently the only available provider
-			// NOTE: Use only if not using the default redis connection
-			// connection = 'otherThanDefault'
-		}
-		raiseError = true //optional
-		defaultTimeout = 10000l //optional
-		defaultTTL = 1000l * 60l * 60l //optional (1 hour)
-		namespace = 'example-app' //optional
+```java
+distributedLock {
+	provider {
+		type = RedisLockProvider // Currently the only available provider
+		// NOTE: Use only if not using the default redis connection
+		// connection = 'otherThanDefault'
 	}
-	
+	raiseError = true //optional
+	defaultTimeout = 10000l //optional
+	defaultTTL = 1000l * 60l * 60l //optional (1 hour)
+	namespace = 'example-app' //optional
+}
+```
+
 Configuration options:
 
 - __provider:__ This block is used to describe your implementation provider
@@ -63,13 +66,15 @@ Usage
 -----
 The plugin provides a single non transactional service that handles all lock negotiation that you can inject in any of your services
 
-	class MyService {
-		def lockService
-		
-		def someMethod() {
-			lockService.acquireLock('/lock/a/shared/fs')
-		}
+```java
+class MyService {
+	def lockService
+	
+	def someMethod() {
+		lockService.acquireLock('/lock/a/shared/fs')
 	}
+}
+```
 
 __LockService Methods__
 
@@ -93,47 +98,50 @@ Examples
 --------
 Simple usages of __LockService__:
 
-	def acquired = lockService.acquireLock('mylock')
+```java
+def acquired = lockService.acquireLock('mylock')
 	
-	if (acquired) {
-		// Perform on operation we want synchronized
-	}
-	else {
-		println("Unable to obtain lock")
-	}
+if (acquired) {
+	// Perform on operation we want synchronized
+}
+else {
+	println("Unable to obtain lock")
+}
 	
-	// try/finally to release lock
-	try {
-		def lock = lockService.acquireLock('lock2', [timeout:2000l, ttl:10000l, raiseError:false])
-		if (lock) {
-			// DO SOME SYNCHRONIZED STUFF
-		}
+// try/finally to release lock
+try {
+	def lock = lockService.acquireLock('lock2', [timeout:2000l, ttl:10000l, raiseError:false])
+	if (lock) {
+		// DO SOME SYNCHRONIZED STUFF
 	}
-	finally {
-		lockService.releaseLock('lock2')
-	}
+}
+finally {
+	lockService.releaseLock('lock2')
+}
+```
 	
 Threaded sample using [executor][executor] plugin:
+
+```java	
+def lockService
 	
-	def lockService
-	
-	(0..10).each { i ->
-		runAsync {
-			try {
-				if (lockService.acquireLock('test-run', [timeout:5000l]))
-					println("Lock acquired for thread ${i}")
-				else
-					println("Failed to acquire lock for thread ${i}")
-					
-				// Sleep for random amount of time
-				sleep(new Random().nextInt(1000) as Long)
-			}
-			finally {
-				lockService.releaseLock('test-run')
-			}
+(0..10).each { i ->
+	runAsync {
+		try {
+			if (lockService.acquireLock('test-run', [timeout:5000l]))
+				println("Lock acquired for thread ${i}")
+			else
+				println("Failed to acquire lock for thread ${i}")
+				
+			// Sleep for random amount of time
+			sleep(new Random().nextInt(1000) as Long)
+		}
+		finally {
+			lockService.releaseLock('test-run')
 		}
 	}
-	
+}
+```	
 Extending/Contributing
 ----------------------
 To add additional providers is simple.  Simply extend the abstract __com.bertram.lock.LockProvider__ class and implement its abstract methods.  Once the new provider is implemented, it must be added to the __LockServiceConfigurer__ configuration method.  Please submit contributions via pull request.
