@@ -4,3 +4,4 @@
 *.iml
 target
 test/projects/example-app/plugins
+grails-distributed-lock*.zip

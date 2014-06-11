@@ -14,7 +14,7 @@ class DistributedLockGrailsPlugin {
     def title = "Distributed Lock Plugin" // Headline display name of the plugin
     def author = "Jordon Saardchit"
     def authorEmail = "jsaardchit@bcap.com"
-	def organization = [ name: "Bertram Capital", url: "http://www.bertramcapital.com/" ]
+	def organization = [ name: "Bertram Labs", url: "http://www.bertramlabs.com/" ]
 	def developers = [
 		[name: "Brian Wheeler"]
 	]
@@ -29,23 +29,6 @@ easier by providing a simple service to facilitate this, as well as defining an 
 	def issueManagement = [system: 'github', url: 'https://github.com/bertramdev/distributed-lock/issues']
 	def license = "APACHE"
 	def scm = [url: "https://github.com/bertramdev/distributed-lock"]
-
-    // Extra (optional) plugin metadata
-
-    // License: one of 'APACHE', 'GPL2', 'GPL3'
-//    def license = "APACHE"
-
-    // Details of company behind the plugin (if there is one)
-//    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
-
-    // Any additional developers beyond the author specified above.
-//    def developers = [ [ name: "Joe Bloggs", email: "joe@bloggs.net" ]]
-
-    // Location of the plugin's issue tracker.
-//    def issueManagement = [ system: "JIRA", url: "http://jira.grails.org/browse/GPMYPLUGIN" ]
-
-    // Online location of the plugin's browseable source code.
-//    def scm = [ url: "http://svn.codehaus.org/grails-plugins/" ]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before

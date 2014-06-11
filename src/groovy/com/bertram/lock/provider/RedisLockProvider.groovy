@@ -23,12 +23,11 @@ class RedisLockProvider extends LockProvider {
 		def timeout = args?.timeout ?: this.acquireTimeout
 		def now = System.currentTimeMillis()
 		def ns = args?.namespace
+		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
 			while (timeout > 0) {
 				if (getRedisService().setnx(buildKey(name, ns), now as String) == 1) {
-					def expires = args?.ttl == null ? this.expireTimeout : args.ttl
-
 					if (expires != 0)
 						getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
 
