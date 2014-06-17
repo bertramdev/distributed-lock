@@ -6,6 +6,11 @@ easier by providing a simple service to facilitate this, as well as defining an 
 
 In the current release, only a provider for [redis][redis] currently exists, which depends on the [grails-redis][grails-redis] plugin. Any other providers are welcome contributions.
 
+Release Notes
+-------------
+* __0.1:__ Initial release
+* __0.2:__ Adding withLock() variations for convenience to LockService impl
+
 Things to be Done
 -----------------
 * Add Provider for [memcached][memcached]
