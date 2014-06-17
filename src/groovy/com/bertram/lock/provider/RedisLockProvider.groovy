@@ -21,12 +21,13 @@ class RedisLockProvider extends LockProvider {
 	Boolean acquireLock(String name, Map args = null) {
 		def locked = false
 		def timeout = args?.timeout ?: this.acquireTimeout
+        def indefinite = timeout == 0 ? true : false
 		def now = System.currentTimeMillis()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
-			while (timeout > 0) {
+			while (timeout > 0 || indefinite) {
 				if (getRedisService().setnx(buildKey(name, ns), now as String) == 1) {
 					if (expires != 0)
 						getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
@@ -35,8 +36,8 @@ class RedisLockProvider extends LockProvider {
 					break
 				}
 				else {
-					timeout -= 100
-					sleep(100)
+					timeout -= 50
+					sleep(50)
 				}
 			}
 			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")

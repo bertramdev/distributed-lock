@@ -14,6 +14,51 @@ class LockService implements GroovyInterceptable {
 
 	private LockProvider providerDelegate = null
 
+    def withLockByDomain(Object domainInstance, Closure clos) {
+        return withLockByDomain(domainInstance, null, clos)
+    }
+
+    def withLockByDomain(Object domainInstance, Map params, Closure clos) {
+        def acquired
+        try {
+            acquired = acquireLockByDomain(domainInstance, params)
+            if (acquired)
+                return clos.call()
+            else
+                log.warn("Unable to obtain lock for: ${domainInstance} - ${params}")
+        }
+        finally {
+            if (acquired)
+                releaseLockByDomain(domainInstance, params)
+        }
+    }
+    def withLock(String name, Closure clos) {
+        return withLock(name, null, clos)
+    }
+
+    /**
+     * Method handles the lock negotiation for its user while executing some runtime implementation provided by a closure
+     * @param name
+     * @param params
+     * @param clos
+     * @return
+     */
+    def withLock(String name, Map params, Closure clos) {
+        def acquired
+        try {
+            acquired = acquireLock(name, params)
+            if (acquired) {
+                return clos.call()
+            }
+            else {
+                log.warn("Unable to obtain lock for: ${name} - ${params}")
+            }
+        }
+        finally {
+            if (acquired) // Only release if we succesfully acquired a lock
+                releaseLock(name, params)
+        }
+    }
 	/**
 	 * acquire lock with no extra arguments
 	 * @param name

@@ -4,6 +4,9 @@ package com.bertram.lock
 
 import spock.lang.*
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
 /**
  * Integration tests for LockService
  */
@@ -47,4 +50,34 @@ class LockServiceIntegrationSpec extends Specification {
 		lockService.releaseLock('lock101')
 		lockService.releaseLock('lock102')
 	}
+
+    void "test using withLock() basic features"() {
+        setup:
+        def goodCounter = 0
+        def badCounter = 0
+        def goodLatch = new CountDownLatch(100)
+        def badLatch = new CountDownLatch(100)
+
+        when:
+        (1..100).each {
+            Thread.start {
+                badCounter++
+                badLatch.countDown()
+            }
+        }
+        (1..100).each {
+            Thread.start {
+                lockService.withLock('test-withlock', [timeout:0]) {
+                    goodCounter++
+                    goodLatch.countDown()
+                }
+            }
+        }
+        goodLatch.await(30, TimeUnit.SECONDS)
+        badLatch.await(30, TimeUnit.SECONDS)
+
+        then:
+        badCounter != 100
+        goodCounter == 100
+    }
 }
