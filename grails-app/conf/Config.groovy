@@ -54,14 +54,14 @@ environments {
 		}
 	}
 	test {
-		distributedLock {
-			provider {
-				type = RedisLockProvider
-				// NOTE: Use only if not using the default redis connection
-				// connection = 'otherThanDefault'
-			}
-			raiseError = false
-			defaultTimeout = 20000l
-		}
+        distributedLock {
+            provider {
+                type = RedisLockProvider
+            }
+            raiseError = true
+            defaultTimeout = 30 * 1000
+            expireTimeout = 0
+            // namespace = 'my.locking.namespace' // USE: if you want a different namespace than the default for your lock keys
+        }
 	}
 }

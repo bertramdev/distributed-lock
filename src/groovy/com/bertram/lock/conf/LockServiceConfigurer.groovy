@@ -32,8 +32,8 @@ class LockServiceConfigurer {
 		this.beanBuilder."${getLockServiceBeanName()}"(config.provider.type) {
 			redisBeanName = config.provider?.connect ?: 'redisService'
 			grailsApp = app
-			if (config.provider?.namespace)
-				namespace = config.provider.namespace
+			if (config.namespace)
+				namespace = config.namespace
 			if (!(config.raiseError instanceof ConfigObject))
 				raiseError = config.raiseError
 			if (!(config.defaultTimeout instanceof ConfigObject))
