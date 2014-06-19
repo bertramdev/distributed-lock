@@ -10,6 +10,7 @@ Release Notes
 -------------
 * __0.1:__ Initial release
 * __0.2:__ Adding withLock() variations for convenience to LockService impl
+* __0.2.1:__ Minor bug fixes in configuration
 
 Things to be Done
 -----------------
