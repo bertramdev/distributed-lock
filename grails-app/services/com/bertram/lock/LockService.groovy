@@ -227,6 +227,10 @@ class LockService implements GroovyInterceptable {
 			providerDelegate = grailsApplication.mainContext.getBean(LockServiceConfigurer.getLockServiceBeanName())
 
 		def metaMethod = this.metaClass.getMetaMethod(name, args)
+
+        if (!metaMethod)
+            throw new MissingMethodException(name, LockService.class, args)
+
 		return metaMethod.invoke(this, args)
 	}
 }
