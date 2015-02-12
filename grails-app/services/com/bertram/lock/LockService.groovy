@@ -213,7 +213,15 @@ class LockService implements GroovyInterceptable {
 	 * @return
 	 */
 	private Boolean isDomain(instance) {
-		def gc = grailsApplication.getArtefact('Domain', instance.class.name)
+		def className
+		try {
+			className = instance.handler.entityName
+		}
+		catch (Throwable t) {
+			className = instance.class.name
+		}
+
+		def gc = grailsApplication.getArtefact('Domain', className)
 		return (gc ? true : false)
 	}
 
