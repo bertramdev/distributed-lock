@@ -1,0 +1,14 @@
+<plugin name='distributed-lock' version='0.3.0' grailsVersion='2.4 &gt; *'>
+  <author>Jordon Saardchit</author>
+  <authorEmail>jsaardchit@bcap.com</authorEmail>
+  <title>Distributed Lock Plugin</title>
+  <description>This plugin provides a framework and interface for a synchronization mechanism distributed to multiple server instances.  In today's world of horizontal computational
+scale and massive concurrency, it becomes increasingly difficult to synchronize operations outside the context of a single computational space (server/process).  This plugin aims to make that
+easier by providing a simple service to facilitate this, as well as defining an interface for adding low level providers.
+</description>
+  <documentation>http://grails.org/plugin/distributed-lock</documentation>
+  <type>DistributedLockGrailsPlugin</type>
+  <resources>
+    <resource>com.bertram.lock.LockService</resource>
+  </resources>
+</plugin>

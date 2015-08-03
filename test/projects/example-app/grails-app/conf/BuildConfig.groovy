@@ -3,8 +3,8 @@ grails.project.class.dir = "target/classes"
 grails.project.test.class.dir = "target/test-classes"
 grails.project.test.reports.dir = "target/test-reports"
 grails.project.work.dir = "target/work"
-grails.project.target.level = 1.6
-grails.project.source.level = 1.6
+grails.project.target.level = 1.7
+grails.project.source.level = 1.7
 //grails.project.war.file = "target/${appName}-${appVersion}.war"
 
 grails.project.fork = [
@@ -56,17 +56,17 @@ grails.project.dependency.resolution = {
 
     plugins {
         // plugins for the build system only
-        build ":tomcat:7.0.53"
+        build ':tomcat:8.0.22'
 
         // plugins for the compile step
-        compile ":scaffolding:2.1.0"
-        compile ':cache:1.1.6'
-        compile ":asset-pipeline:1.8.7"
+        compile ':asset-pipeline:2.3.9'
+        compile ':cache:1.1.8'
+        compile ':scaffolding:2.1.2'
 
         // plugins needed at runtime but not for compilation
-        runtime ":hibernate4:4.3.5.3" // or ":hibernate:3.6.10.15"
-        runtime ":database-migration:1.4.0"
-        runtime ":jquery:1.11.1"
+        runtime ':database-migration:1.4.0'
+        runtime ':hibernate4:4.3.8.1'
+        runtime ':jquery:1.11.1'
 
         // Uncomment these to enable additional asset-pipeline capabilities
         //compile ":sass-asset-pipeline:1.7.4"
