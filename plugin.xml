@@ -1,4 +1,4 @@
-<plugin name='distributed-lock' version='0.3.0' grailsVersion='2.4 &gt; *'>
+<plugin name='distributed-lock' version='0.2.2' grailsVersion='2.4 &gt; *'>
   <author>Jordon Saardchit</author>
   <authorEmail>jsaardchit@bcap.com</authorEmail>
   <title>Distributed Lock Plugin</title>
