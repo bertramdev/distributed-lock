@@ -2,6 +2,8 @@
 .project
 .idea
 *.iml
+build/
+.gradle/
 target
 test/projects/example-app/plugins
 grails-distributed-lock*.zip
