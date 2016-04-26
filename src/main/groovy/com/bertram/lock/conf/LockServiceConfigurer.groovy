@@ -41,11 +41,11 @@ class LockServiceConfigurer {
 			grailsApp = app
 			if (config.namespace)
 				namespace = config.namespace
-			if (!(config.raiseError instanceof ConfigObject))
+			if (config.raiseError)
 				raiseError = config.raiseError
-			if (!(config.defaultTimeout instanceof ConfigObject))
+			if (config.defaultTimeout)
 				acquireTimeout = config.defaultTimeout
-			if (!(config.expireTimeout instanceof ConfigObject))
+			if (config.expireTimeout)
 				expireTimeout = config.expireTimeout
 		}
 
