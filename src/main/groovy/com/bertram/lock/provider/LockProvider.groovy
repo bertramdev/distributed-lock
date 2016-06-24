@@ -5,7 +5,7 @@ package com.bertram.lock.provider
  */
 abstract class LockProvider {
 	public static final Long DEFAULT_LOCK_ACQUIRE_TIMEOUT = 30000l
-	public static final Long DEFAULT_LOCK_EXPIRE_TIMEOUT = 0l
+	public static final Long DEFAULT_LOCK_EXPIRE_TIMEOUT = 30000l
 	public static final Boolean DEFAULT_LOCK_ACQUIRE_FAIL_EXCEPTION = true
 	protected static final String DEFAULT_LOCK_NAME_SPACE = 'distributed-lock'
 
@@ -15,7 +15,7 @@ abstract class LockProvider {
 	def expireTimeout = DEFAULT_LOCK_EXPIRE_TIMEOUT
 	def raiseError = DEFAULT_LOCK_ACQUIRE_FAIL_EXCEPTION
 
-	abstract Boolean acquireLock(String name, Map args)
+	abstract String acquireLock(String name, Map args)
 	abstract Boolean releaseLock(String name, Map args)
 	abstract Boolean renewLock(String name, Map args)
 	abstract Set getLocks()

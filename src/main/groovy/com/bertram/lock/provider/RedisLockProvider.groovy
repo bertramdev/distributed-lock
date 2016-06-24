@@ -18,26 +18,27 @@ class RedisLockProvider extends LockProvider {
 	 * @param args
 	 * @return
 	 */
-	Boolean acquireLock(String name, Map args = null) {
-		def locked = false
+	String acquireLock(String name, Map args = null) {
 		def timeout = args?.timeout ?: this.acquireTimeout
         def indefinite = timeout == 0 ? true : false
 		def now = System.currentTimeMillis()
+		def keyValue = java.util.UUID.randomUUID()?.toString()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
 			while (timeout > 0 || indefinite) {
-				if (getRedisService().setnx(buildKey(name, ns), now as String) == 1) {
+				if (getRedisService().setnx(buildKey(name, ns), keyValue) == 1) {
 					if (expires != 0)
 						getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
 
-					return true
+					return keyValue
 					break
 				}
 				else {
-					timeout -= 50
-					sleep(50)
+					def randomTimeout = 50 + (int)(Math.random() * 1000)
+					timeout -= randomTimeout
+					sleep(randomTimeou)
 				}
 			}
 			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")
@@ -48,7 +49,7 @@ class RedisLockProvider extends LockProvider {
 				throw t
 		}
 
-		return locked
+		return null
 	}
 
 	/**
@@ -59,7 +60,13 @@ class RedisLockProvider extends LockProvider {
 	 */
 	Boolean releaseLock(String name, Map args = null) {
 		def ns = args?.namespace
+		def id = args.lock
 		try {
+			def val = getRedisService().get(buildKey(name, ns))
+			if(val && id && val != id) {
+				log.warn("Someone else has the lock ${name}")
+				return
+			}
 			getRedisService().del(buildKey(name, ns))
 		}
 		catch(Throwable t) {

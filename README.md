@@ -78,7 +78,7 @@ class MyService {
 	def lockService
 	
 	def someMethod() {
-		lockService.acquireLock('/lock/a/shared/fs')
+		def lockKey = lockService.acquireLock('/lock/a/shared/fs')
 	}
 }
 ```
@@ -106,9 +106,9 @@ Examples
 Simple usages of __LockService__:
 
 ```java
-def acquired = lockService.acquireLock('mylock')
+def lockKey = lockService.acquireLock('mylock')
 	
-if (acquired) {
+if (lockKey) {
 	// Perform on operation we want synchronized
 }
 else {
@@ -123,7 +123,7 @@ try {
 	}
 }
 finally {
-	lockService.releaseLock('lock2')
+	lockService.releaseLock('lock2',[lock: lock])
 }
 ```
 	
@@ -134,8 +134,9 @@ def lockService
 	
 (0..10).each { i ->
 	runAsync {
+		def lock
 		try {
-			if (lockService.acquireLock('test-run', [timeout:5000l]))
+			if (lock = lockService.acquireLock('test-run', [timeout:5000l]))
 				println("Lock acquired for thread ${i}")
 			else
 				println("Failed to acquire lock for thread ${i}")
@@ -144,7 +145,7 @@ def lockService
 			sleep(new Random().nextInt(1000) as Long)
 		}
 		finally {
-			lockService.releaseLock('test-run')
+			lockService.releaseLock('test-run',[lock:lock])
 		}
 	}
 }
