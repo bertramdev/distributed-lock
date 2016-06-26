@@ -41,7 +41,13 @@ class RedisLockProvider extends LockProvider {
 					sleep(randomTimeout)
 				}
 			}
-			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")
+			if(getRedisService().pttl(buildKey(name, ns)) <= 0) {
+				log.warn("Non expiring lock detected, clearing lock and attempting reacquire...")
+				getRedisService().del(buildKey(name, ns))
+				return acquireLock(name,args)
+			} else {
+				log.error("Unable to acquire lock for ${name}: acquire timeout expired.")		
+			}
 		}
 		catch (Throwable t) {
 			log.error("Lock acquire hard failed: ${t.message}", t)
