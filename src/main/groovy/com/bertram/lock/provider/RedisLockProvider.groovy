@@ -38,7 +38,7 @@ class RedisLockProvider extends LockProvider {
 				else {
 					def randomTimeout = 50 + (int)(Math.random() * 1000)
 					timeout -= randomTimeout
-					sleep(randomTimeou)
+					sleep(randomTimeout)
 				}
 			}
 			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")
