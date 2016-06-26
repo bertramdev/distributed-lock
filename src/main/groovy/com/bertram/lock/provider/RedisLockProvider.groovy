@@ -60,7 +60,7 @@ class RedisLockProvider extends LockProvider {
 	 */
 	Boolean releaseLock(String name, Map args = null) {
 		def ns = args?.namespace
-		def id = args.lock
+		def id = args?.lock
 		try {
 			def val = getRedisService().get(buildKey(name, ns))
 			if(val && id && val != id) {
