@@ -178,7 +178,7 @@ class LockService implements GroovyInterceptable {
 	* @return
 	*/
 	String checkLock(String name, Map params) {
-		return providerDelegate.checkLock(name, parans)
+		return providerDelegate.checkLock(name, params)
 	}
 
 	/**
