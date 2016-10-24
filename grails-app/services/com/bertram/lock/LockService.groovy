@@ -172,6 +172,16 @@ class LockService implements GroovyInterceptable {
 	}
 
 	/**
+	* Method is used to see if a lock has already been acquired or not
+	* @param name
+	* @param params
+	* @return
+	*/
+	String checkLock(String name, Map params) {
+		return providerDelegate.checkLock(name, parans)
+	}
+
+	/**
 	 * renew a lock by domain class with no extra arguments
 	 * @param domainInstance
 	 * @return

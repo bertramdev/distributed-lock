@@ -18,6 +18,7 @@ abstract class LockProvider {
 	abstract String acquireLock(String name, Map args)
 	abstract Boolean releaseLock(String name, Map args)
 	abstract Boolean renewLock(String name, Map args)
+	abstract String checkLock(String name, Map args)
 	abstract Set getLocks()
 
 	protected String buildKey(String key, String namespace = null) {

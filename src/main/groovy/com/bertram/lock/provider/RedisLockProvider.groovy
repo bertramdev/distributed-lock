@@ -83,6 +83,25 @@ class RedisLockProvider extends LockProvider {
 	}
 
 	/**
+	* This will check if a lock is currently acquired or not
+	* @param name - The unique lock key we are checking for
+	* @param args - Optional namespace can be passedin this Map
+	* @return String the UUID representing the lock instance or who may have the lock (NULL if no lock is currently acquired)
+	*/
+	String checkLock(String name, Map args=null) {
+		def ns = args?.namespace
+		try {
+			def val = getRedisService().get(buildKey(name, ns))
+			return val
+		}
+		catch(Throwable t) {
+			log.error("Unable to check for lock ${name}: ${t.message}", t)
+			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
+				throw t
+		}
+	}
+
+	/**
 	 * This will reset the expiration of a lock to milliseconds from now
 	 * @param name
 	 * @param args - use args.expires to set new timeout
