@@ -29,11 +29,14 @@ class RedisLockProvider extends LockProvider {
 		try {
 			while (timeout > 0 || indefinite) {
 				if (getRedisService().setnx(buildKey(name, ns), keyValue) == 1) {
-					if (expires != 0)
-						getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
-
-					return keyValue
-					break
+					def val = getRedisService().get(buildKey(name, ns))
+					if(val == keyValue) {
+						if (expires != 0)
+							getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
+						return keyValue
+						break	
+					}
+					
 				}
 				else {
 					def randomTimeout = 50 + (int)(Math.random() * 1000)
