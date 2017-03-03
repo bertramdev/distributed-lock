@@ -31,10 +31,15 @@ class RedisLockProvider extends LockProvider {
 				if (getRedisService().setnx(buildKey(name, ns), keyValue) == 1) {
 					def val = getRedisService().get(buildKey(name, ns))
 					if(val == keyValue) {
-						if (expires != 0)
+						if (expires != 0) {
 							getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
+						}
 						return keyValue
-						break	
+					} else {
+						log.warn("Parallel Lock Acquisition Detected, Waiting to try again...")
+						def randomTimeout = 50 + (int)(Math.random() * 1000)
+						timeout -= randomTimeout
+						sleep(randomTimeout)
 					}
 					
 				}
