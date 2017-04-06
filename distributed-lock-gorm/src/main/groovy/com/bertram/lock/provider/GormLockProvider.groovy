@@ -34,8 +34,8 @@ public class GormLockProvider extends LockProvider {
 					Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
-							DistributedLock.where{key == buildKey(name,ns) && timeout < now}.deleteAll()
-							def lock = new DistributedLock(key:buildKey(name,ns), value: keyValue,timeout: now + expires)
+							DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
+							def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
 							lock.save(flush:true,failOnError:true)
 						}
 					}.get()
@@ -74,7 +74,7 @@ public class GormLockProvider extends LockProvider {
 				def now = new Date().time
 				DistributedLock.withNewSession { session ->
 					def lock = DistributedLock.withCriteria(uniqueResult:true) {
-						eq('key',buildKey(name,ns))
+						eq('name',buildKey(name,ns))
 						or {
 							isNull('timeout')
 							gte('timeout',now)
@@ -86,7 +86,7 @@ public class GormLockProvider extends LockProvider {
 						log.warn("Someone else has the lock ${name}")
 						return
 					}
-					DistributedLock.where{key == lock.key}.deleteAll()
+					DistributedLock.where{name == lock.key}.deleteAll()
 				}
 			}.get()
 		}
@@ -110,7 +110,7 @@ public class GormLockProvider extends LockProvider {
 				def now = new Date().time
 				DistributedLock.withNewSession { session ->
 					def lock = DistributedLock.withCriteria(uniqueResult:true) {
-						eq('key',buildKey(name,ns))
+						eq('name',buildKey(name,ns))
 						or {
 							isNull('timeout')
 							gte('timeout',now)
@@ -144,7 +144,7 @@ public class GormLockProvider extends LockProvider {
 				def now = new Date().time
 				DistributedLock.withNewSession { session ->
 					def lock = DistributedLock.withCriteria(uniqueResult:true) {
-						eq('key',buildKey(name,ns))
+						eq('name',buildKey(name,ns))
 						or {
 							isNull('timeout')
 							gte('timeout',now)
@@ -153,9 +153,9 @@ public class GormLockProvider extends LockProvider {
 					}
 					if(lock) {
 						if (expires > 0)
-							DistributedLock.where { key == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:now + expires)
+							DistributedLock.where { name == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:now + expires)
 						else
-							DistributedLock.where{ key == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:null)
+							DistributedLock.where{ name == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:null)
 						return true
 					} else {
 						return false
@@ -180,7 +180,7 @@ public class GormLockProvider extends LockProvider {
 		try {
 			return Promises.tasks {
 				DistributedLock.withNewSession { session ->
-					return DistributedLock.exeuteQuery("select key from DistributedLock distributedlock where distributedlock.key like ${namespace + '.%'} distributedlock.timeout IS NULL OR distributedlock.timeout < ${new Date().time}")
+					return DistributedLock.executeQuery("select key from DistributedLock distributedlock where distributedlock.key like ${namespace + '.%'} distributedlock.timeout IS NULL OR distributedlock.timeout < ${new Date().time}")
 				}
 			}.get()
 		}
