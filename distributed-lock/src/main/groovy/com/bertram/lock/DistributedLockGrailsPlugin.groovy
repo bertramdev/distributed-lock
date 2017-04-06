@@ -12,7 +12,6 @@ class DistributedLockGrailsPlugin extends Plugin {
         "grails-app/views/error.gsp"
     ]
 
-    // TODO Fill in these fields
     def title = "Distributed Lock Plugin" // Headline display name of the plugin
     def author = "Jordon Saardchit"
     def authorEmail = "jsaardchit@bcap.com"

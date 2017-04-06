@@ -22,21 +22,25 @@ class RedisLockProvider extends LockProvider {
 		def timeout = args?.timeout ?: this.acquireTimeout
         def indefinite = timeout == 0 ? true : false
 		def now = System.currentTimeMillis()
-		def keyValue = java.util.UUID.randomUUID()?.toString()
+		def keyValue
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
 			while (timeout > 0 || indefinite) {
-				if (getRedisService().setnx(buildKey(name, ns), keyValue) == 1) {
+				keyValue = java.util.UUID.randomUUID()?.toString()
+				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
+				def result = getRedisService().setnx(buildKey(name, ns), keyValue)
+				if (result == 1) {
 					def val = getRedisService().get(buildKey(name, ns))
 					if(val == keyValue) {
 						if (expires != 0) {
 							getRedisService().expire(buildKey(name, ns), (expires / 1000) as Integer)
 						}
+						log.debug("Lock Acquired")
 						return keyValue
 					} else {
-						log.warn("Parallel Lock Acquisition Detected, Waiting to try again...")
+						log.info("Parallel Lock Acquisition Detected, Waiting to try again...")
 						def randomTimeout = 50 + (int)(Math.random() * 1000)
 						timeout -= randomTimeout
 						sleep(randomTimeout)
@@ -44,6 +48,7 @@ class RedisLockProvider extends LockProvider {
 					
 				}
 				else {
+					log.debug("Lock Acquired by someone else, waiting to try again...")
 					def randomTimeout = 50 + (int)(Math.random() * 1000)
 					timeout -= randomTimeout
 					sleep(randomTimeout)
