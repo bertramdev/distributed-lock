@@ -31,23 +31,34 @@ public class GormLockProvider extends LockProvider {
 				keyValue = java.util.UUID.randomUUID()?.toString()
 				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
 				try {
-					Promises.tasks {
+					def lockAcquired = Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
 							DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
+							def count = DistributedLock.countByName(buildKey(name,ns))
+							if(count > 0) {
+								return false
+							}
 							def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
 							lock.save(flush:true,failOnError:true)
+							return true
 						}
 					}.get()
-					return keyValue
+					if(!lockAcquired) {
+						log.debug("Lock Acquired by someone else, waiting to try again...")
+						def randomTimeout = 250 + (int)(Math.random() * 1000)
+						timeout -= randomTimeout
+						sleep(randomTimeout)
+					} else {
+						return keyValue
+					}
 				} catch(ex) {
 					// Possible duplicate lock exception
 					log.debug("Lock Acquired by someone else, waiting to try again...")
-					def randomTimeout = 50 + (int)(Math.random() * 1000)
+					def randomTimeout = 250 + (int)(Math.random() * 1000)
 					timeout -= randomTimeout
 					sleep(randomTimeout)
 				}
-			
 			}
 			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")			
 		}
