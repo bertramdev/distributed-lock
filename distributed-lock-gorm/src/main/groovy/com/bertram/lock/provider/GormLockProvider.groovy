@@ -41,6 +41,7 @@ public class GormLockProvider extends LockProvider {
 							}
 							def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
 							lock.save(flush:true,failOnError:true)
+							lock.discard()
 							return true
 						}
 					}.get()
@@ -83,21 +84,18 @@ public class GormLockProvider extends LockProvider {
 		try {
 			Promises.tasks {
 				def now = new Date().time
+				
 				DistributedLock.withNewSession { session ->
-					def lock = DistributedLock.withCriteria(uniqueResult:true) {
-						eq('name',buildKey(name,ns))
-						or {
-							isNull('timeout')
-							gte('timeout',now)
-						}
-						maxResults(1)
-					}
-					def val = lock?.value
+					def lock = DistributedLock.where {
+						name == buildKey(name,ns) && (timeout == null || timeout >= now)
+					}.property('key').property('value').list()?.first()
+					
+					def val = lock[1]
 					if(val && id && val != id) {
 						log.warn("Someone else has the lock ${name}")
 						return
 					}
-					DistributedLock.where{name == lock.key}.deleteAll()
+					DistributedLock.where{name == lock[0]}.deleteAll()
 				}
 			}.get()
 		}
