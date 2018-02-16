@@ -79,25 +79,62 @@ public class GormLockProvider extends LockProvider {
 	 * @return
 	 */
 	Boolean releaseLock(String name, Map args = null) {
+		def timeout = args?.timeout ?: this.acquireTimeout
+        def indefinite = timeout == 0 ? true : false
 		def ns = args?.namespace
 		def id = args?.lock
 		try {
-			Promises.tasks {
-				def now = new Date().time
-				
-				DistributedLock.withNewSession { session ->
-					def lock = DistributedLock.where {
-						name == buildKey(name,ns) && (timeout == null || timeout >= now)
-					}.property('key').property('value').list()?.first()
-					
-					def val = lock[1]
-					if(val && id && val != id) {
-						log.warn("Someone else has the lock ${name}")
-						return
+			while (timeout > 0 || indefinite) {
+				log.debug("Attempting to release lock ${buildKey(name, ns)} ${keyValue}")
+				try {
+					def success = Promises.tasks {
+						Long now = new Date().time
+						String keyName = buildKey(name,ns)
+						DistributedLock.withNewTransaction { tx ->
+							def locks = DistributedLock.where {
+								name == keyName && (timeout == null || timeout >= now)
+							}.property('name').property('value').list()
+							def lock = locks ? locks[0] : null
+
+							
+							def val = lock ? lock[1] : null
+							if(val && id && val != id) {
+								log.warn("Someone else has the lock ${name}")
+								return false
+							}
+							if (!lock) {
+								log.info("Unable to find lock ${buildKey(name, ns)} to release")
+								return true
+							}
+							DistributedLock.where{name == keyName}.deleteAll()
+							return true
+						}
+					}.get()
+
+					if(!success) {
+						log.debug("Lock Acquired by someone else, waiting to try again...")
+						def randomTimeout = 250 + (int)(Math.random() * 1000)
+						timeout -= randomTimeout
+						sleep(randomTimeout)
 					}
-					DistributedLock.where{name == lock[0]}.deleteAll()
+					else {
+						return true
+					}
 				}
-			}.get()
+				catch (Throwable t){
+					// possible db exceptions, make sure to retry until timeout
+					log.debug("Failed to acquire lock: ${t.message}")
+					def randomTimeout = 250 + (int)(Math.random() * 1000)
+					timeout -= randomTimeout
+					sleep(randomTimeout)
+				}
+			}
+			// this means timeout expired
+			log.debug("Timeout expired while trying to release lock ${buildKey(name, ns)}")
+			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
+				throw new RuntimeException("Timeout expired while trying to release lock ${buildKey(name, ns)}")
+			else
+				return false
 		}
 		catch(Throwable t) {
 			log.error("Unable to release lock ${name}: ${t.message}", t)
@@ -189,7 +226,7 @@ public class GormLockProvider extends LockProvider {
 		try {
 			return Promises.tasks {
 				DistributedLock.withNewSession { session ->
-					return DistributedLock.executeQuery("select key from DistributedLock distributedlock where distributedlock.key like ${namespace + '.%'} distributedlock.timeout IS NULL OR distributedlock.timeout < ${new Date().time}")
+					return DistributedLock.executeQuery("select name from DistributedLock distributedlock where distributedlock.name like ${namespace + '.%'} distributedlock.timeout IS NULL OR distributedlock.timeout < ${new Date().time}")
 				}
 			}.get()
 		}

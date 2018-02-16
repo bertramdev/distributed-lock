@@ -32,6 +32,9 @@ easier by providing a simple service to facilitate this, as well as defining an 
     def license = "APACHE"
     def scm = [url: "https://github.com/bertramdev/distributed-lock"]
 
+    // load order
+    def loadBefore = ['quartz']
+
     Closure doWithSpring() { {->
             // TODO Implement runtime spring config (optional)
         }
