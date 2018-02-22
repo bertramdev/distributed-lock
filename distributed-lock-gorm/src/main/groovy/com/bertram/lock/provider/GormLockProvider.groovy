@@ -85,7 +85,7 @@ public class GormLockProvider extends LockProvider {
 		def id = args?.lock
 		try {
 			while (timeout > 0 || indefinite) {
-				log.debug("Attempting to release lock ${buildKey(name, ns)} ${keyValue}")
+				log.debug("Attempting to release lock ${buildKey(name, ns)}")
 				try {
 					def success = Promises.tasks {
 						Long now = new Date().time
