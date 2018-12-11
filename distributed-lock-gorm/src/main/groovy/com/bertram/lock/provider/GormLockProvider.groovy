@@ -163,10 +163,15 @@ public class GormLockProvider extends LockProvider {
 						}
 						maxResults(1)
 					}
-					return lock
+					return lock ?: false
 				}
 			}.get()
-			return result?.value
+			if(result == false) {
+				return null
+			} else {
+				return result?.value	
+			}
+			
 		}
 		catch(Throwable t) {
 			log.error("Unable to check for lock ${name}: ${t.message}", t)
