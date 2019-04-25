@@ -35,14 +35,27 @@ public class GormLockProvider extends LockProvider {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
 							DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
-							def count = DistributedLock.countByName(buildKey(name,ns))
+							def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
 							if(count > 0) {
 								return false
 							}
-							def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
-							lock.save(flush:true,failOnError:true)
-							lock.discard()
-							return true
+							def localLocked = acquireLocalLock(name,keyValue,args)
+							if(localLocked) {
+								try {
+									def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
+									lock.save(flush:true,failOnError:true)
+									lock.discard()
+									return true		
+								} catch(ex2) {
+									releaseLocalLock(name,args)
+									return false
+								}
+								
+							} else {
+								//lock already acquired locally, skip this
+								return false
+							}
+							
 						}
 					}.get()
 					if(!lockAcquired) {
@@ -102,10 +115,13 @@ public class GormLockProvider extends LockProvider {
 								log.warn("Someone else has the lock ${name}")
 								return false
 							}
+
+							releaseLocalLock(name,val,args)
 							if (!lock) {
 								log.info("Unable to find lock ${buildKey(name, ns)} to release")
 								return true
 							}
+
 							DistributedLock.where{name == keyName}.deleteAll()
 							return true
 						}
@@ -155,7 +171,11 @@ public class GormLockProvider extends LockProvider {
 			def result = Promises.tasks {
 				def now = new Date().time
 				DistributedLock.withNewSession { session ->
-					def lock = DistributedLock.withCriteria(uniqueResult:true) {
+					def localValue = checkLocalLock(name,args)
+					if(localValue) {
+						return [value: localValue]
+					}
+					def lock = DistributedLock.withCriteria(uniqueResult:true,cache:false) {
 						eq('name',buildKey(name,ns))
 						or {
 							isNull('timeout')
@@ -194,7 +214,7 @@ public class GormLockProvider extends LockProvider {
 			def result = Promises.tasks {
 				def now = new Date().time
 				DistributedLock.withNewSession { session ->
-					def lock = DistributedLock.withCriteria(uniqueResult:true) {
+					def lock = DistributedLock.withCriteria(uniqueResult:true, cache:false) {
 						eq('name',buildKey(name,ns))
 						or {
 							isNull('timeout')
@@ -207,6 +227,8 @@ public class GormLockProvider extends LockProvider {
 							DistributedLock.where { name == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:now + expires)
 						else
 							DistributedLock.where{ name == buildKey(name,ns) && (timeout == null || timeout > now)}.updateAll(timeout:null)
+
+						renewLocalLock(name,args)
 						return true
 					} else {
 						return false
