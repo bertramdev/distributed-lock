@@ -34,6 +34,12 @@ public class GormLockProvider extends LockProvider {
 					def lockAcquired = Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
+							def localLock = checkLocalLock(name,args)
+							if(localLock) {
+								//still locked, no need to even check right now
+								return false
+							}
+
 							DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
 							def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
 							if(count > 0) {
@@ -104,31 +110,30 @@ public class GormLockProvider extends LockProvider {
 						Long now = new Date().time
 						String keyName = buildKey(name,ns)
 						DistributedLock.withNewTransaction { tx ->
-							def locks = DistributedLock.where {
-								name == keyName && (timeout == null || timeout >= now)
-							}.property('name').property('value').list()
-							def lock = locks ? locks[0] : null
-
+							def lockRow = DistributedLock.executeQuery("select d.value from DistributedLock d where d.name = :name AND (d.timeout IS NULL OR d.timeout >= :date)",[name: buildKey(name,ns),date: now])
+							def lockValue = lockRow ? lockRow.first() : null
 							
-							def val = lock ? lock[1] : null
+							def val = lockValue
 							if(val && id && val != id) {
 								log.warn("Someone else has the lock ${name}")
 								return false
 							}
 
-							releaseLocalLock(name,val,args)
-							if (!lock) {
+							if (!lockValue) {
 								log.info("Unable to find lock ${buildKey(name, ns)} to release")
+								releaseLocalLock(name,val,args)
+
 								return true
 							}
 
 							DistributedLock.where{name == keyName}.deleteAll()
+							releaseLocalLock(name,val,args)
 							return true
 						}
 					}.get()
 
 					if(!success) {
-						log.debug("Lock Acquired by someone else, waiting to try again...")
+						log.info("Lock Acquired by someone else, waiting to try again...")
 						def randomTimeout = 250 + (int)(Math.random() * 1000)
 						timeout -= randomTimeout
 						sleep(randomTimeout)
@@ -139,7 +144,7 @@ public class GormLockProvider extends LockProvider {
 				}
 				catch (Throwable t){
 					// possible db exceptions, make sure to retry until timeout
-					log.debug("Failed to acquire lock: ${t.message}")
+					log.info("Failed to acquire lock: ${t.message}")
 					def randomTimeout = 250 + (int)(Math.random() * 1000)
 					timeout -= randomTimeout
 					sleep(randomTimeout)

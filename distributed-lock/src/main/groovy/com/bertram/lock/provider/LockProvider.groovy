@@ -16,7 +16,7 @@ abstract class LockProvider {
 	def acquireTimeout = DEFAULT_LOCK_ACQUIRE_TIMEOUT
 	def expireTimeout = DEFAULT_LOCK_EXPIRE_TIMEOUT
 	def raiseError = DEFAULT_LOCK_ACQUIRE_FAIL_EXCEPTION
-	def lockObject = new Object
+	def lockObject = new Object()
 	abstract String acquireLock(String name, Map args)
 	abstract Boolean releaseLock(String name, Map args)
 	abstract Boolean renewLock(String name, Map args)
