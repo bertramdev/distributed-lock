@@ -22,13 +22,13 @@ class RedisLockProvider extends LockProvider {
 		def timeout = args?.timeout ?: this.acquireTimeout
         def indefinite = timeout == 0 ? true : false
 		def now = System.currentTimeMillis()
-		def keyValue
+		def keyValue = java.util.UUID.randomUUID()?.toString()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
 			while (timeout > 0 || indefinite) {
-				keyValue = java.util.UUID.randomUUID()?.toString()
+				
 				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
 				def result = getRedisService().setnx(buildKey(name, ns), keyValue)
 				if (result == 1) {

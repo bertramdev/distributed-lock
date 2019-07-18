@@ -21,14 +21,12 @@ public class GormLockProvider extends LockProvider {
 		def timeout = args?.timeout ?: this.acquireTimeout
         def indefinite = timeout == 0 ? true : false
 		//def now = System.currentTimeMillis()
-		def keyValue
+		def keyValue = java.util.UUID.randomUUID()?.toString()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
 
 		try {
 			while (timeout > 0 || indefinite) {
-
-				keyValue = java.util.UUID.randomUUID()?.toString()
 				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
 				try {
 					def lockAcquired = Promises.tasks {
@@ -50,7 +48,6 @@ public class GormLockProvider extends LockProvider {
 								try {
 									def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
 									lock.save(flush:true,failOnError:true)
-									lock.discard()
 									return true		
 								} catch(ex2) {
 									releaseLocalLock(name,args)
