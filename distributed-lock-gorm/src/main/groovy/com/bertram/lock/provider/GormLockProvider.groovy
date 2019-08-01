@@ -32,33 +32,34 @@ public class GormLockProvider extends LockProvider {
 					def lockAcquired = Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
-							def localLock = checkLocalLock(name,args)
-							if(localLock) {
-								//still locked, no need to even check right now
-								return false
-							}
-
-							DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
-							def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
-							if(count > 0) {
-								return false
-							}
-							def localLocked = acquireLocalLock(name,keyValue,args)
-							if(localLocked) {
-								try {
-									def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
-									lock.save(flush:true,failOnError:true)
-									return true		
-								} catch(ex2) {
-									releaseLocalLock(name,args)
+							DistributedLock.withNewTransaction { tx ->
+								def localLock = checkLocalLock(name,args)
+								if(localLock) {
+									//still locked, no need to even check right now
 									return false
 								}
-								
-							} else {
-								//lock already acquired locally, skip this
-								return false
+
+								DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
+								def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
+								if(count > 0) {
+									return false
+								}
+								def localLocked = acquireLocalLock(name,keyValue,args)
+								if(localLocked) {
+									try {
+										def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
+										lock.save(flush:true,failOnError:true)
+										return true		
+									} catch(ex2) {
+										releaseLocalLock(name,args)
+										return false
+									}
+									
+								} else {
+									//lock already acquired locally, skip this
+									return false
+								}
 							}
-							
 						}
 					}.get()
 					if(!lockAcquired) {
