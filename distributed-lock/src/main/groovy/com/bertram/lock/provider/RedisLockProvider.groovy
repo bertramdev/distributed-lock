@@ -151,7 +151,7 @@ class RedisLockProvider extends LockProvider {
 	}
 
 	/**
-	 * Grabs the service interface to the underlying redis implmentation to be used for locking
+	 * Grabs the service interface to the underlying redis implementation to be used for locking
 	 * @return
 	 */
 	private getRedisService() {

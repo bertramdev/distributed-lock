@@ -1,7 +1,6 @@
 package com.bertram.lock
 
 import grails.test.mixin.integration.Integration
-import grails.transaction.*
 import spock.lang.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
