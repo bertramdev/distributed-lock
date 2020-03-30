@@ -1,7 +1,4 @@
 buildscript {
-    ext {
-        grailsVersion = project.grailsVersion
-    }
     repositories {
         mavenLocal()
         maven { url "https://repo.grails.org/grails/core" }
@@ -23,21 +20,9 @@ apply plugin:"idea"
 apply plugin:"org.grails.grails-plugin"
 apply plugin:"org.grails.grails-plugin-publish"
 
-ext {
-    grailsVersion = project.grailsVersion
-    gradleWrapperVersion = project.gradleWrapperVersion
-}
-
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.grails:grails-bom:$grailsVersion"
-    }
-    applyMavenExclusions false
 }
 
 dependencies {
@@ -49,16 +34,15 @@ dependencies {
     provided "org.grails:grails-dependencies"
     provided 'javax.servlet:javax.servlet-api:3.1.0'
 
-    testCompile "org.grails:grails-plugin-testing"
-
     console "org.grails:grails-console"
 
-    compileOnly 'org.grails.plugins:redis:2.0.4'
-    testCompile "org.grails:grails-plugin-testing"
-}
+    compileOnly 'org.grails.plugins:redis:2.0.5'
+    testCompile 'org.grails.plugins:redis:2.0.5'
+    testCompile "org.grails:grails-gorm-testing-support"
+    testCompile "org.mockito:mockito-core"
+    testCompile "org.grails:grails-web-testing-support"
+    testCompile "org.grails:grails-test-mixins:3.3.0"
 
-task wrapper(type: Wrapper) {
-    gradleVersion = gradleWrapperVersion
 }
 
 bintray {
