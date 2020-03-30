@@ -9,7 +9,7 @@ import grails.async.Promises
 * @author David Estes
 */
 @Slf4j
-public class GormLockProvider extends LockProvider {
+public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 
 	/**
 	 * This method will attempt to acquire a lock for a specified amount of time

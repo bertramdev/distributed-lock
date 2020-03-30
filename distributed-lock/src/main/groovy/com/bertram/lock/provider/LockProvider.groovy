@@ -3,7 +3,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Created by jsaardchit on 6/9/14.
  */
-abstract class LockProvider {
+public abstract class LockProvider {
 	public static final Long DEFAULT_LOCK_ACQUIRE_TIMEOUT = 30000l
 	public static final Long DEFAULT_LOCK_EXPIRE_TIMEOUT = 30000l
 	public static final Boolean DEFAULT_LOCK_ACQUIRE_FAIL_EXCEPTION = true
