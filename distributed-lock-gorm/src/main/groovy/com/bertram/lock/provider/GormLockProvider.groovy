@@ -24,17 +24,19 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 		def keyValue = java.util.UUID.randomUUID()?.toString()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
-
 		try {
 			while (timeout > 0 || indefinite) {
 				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
 				try {
+					//impose consistent sleep lock delays for balance
+					sleep((int)(Math.random() * 250))
 					def lockAcquired = Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
 							DistributedLock.withNewTransaction { tx ->
 								def localLock = checkLocalLock(name,args)
 								if(localLock) {
+									log.debug("local lock detected")
 									//still locked, no need to even check right now
 									return false
 								}
@@ -51,11 +53,13 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 										lock.save(flush:true,failOnError:true)
 										return true		
 									} catch(ex2) {
-										releaseLocalLock(name,args)
+										log.debug("Error Creating Local Lock: ${ex2.message}",ex2)
+										releaseLocalLock(name,keyValue,args)
 										return false
 									}
 									
 								} else {
+									log.debug("Failed to acquire local lock")
 									//lock already acquired locally, skip this
 									return false
 								}
@@ -64,7 +68,7 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 					}.get()
 					if(!lockAcquired) {
 						log.debug("Lock Acquired by someone else, waiting to try again...")
-						def randomTimeout = 250 + (int)(Math.random() * 1000)
+						def randomTimeout = 50 + (int)(Math.random() * 250)
 						timeout -= randomTimeout
 						sleep(randomTimeout)
 					} else {
@@ -73,7 +77,7 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 				} catch(ex) {
 					// Possible duplicate lock exception
 					log.debug("Lock Acquired by someone else, waiting to try again...")
-					def randomTimeout = 250 + (int)(Math.random() * 1000)
+					def randomTimeout = 50 + (int)(Math.random() * 250)
 					timeout -= randomTimeout
 					sleep(randomTimeout)
 				}

@@ -46,9 +46,9 @@ class LockServiceConfigurer {
 			if (config.raiseError)
 				raiseError = config.raiseError
 			if (config.defaultTimeout)
-				acquireTimeout = config.defaultTimeout
+				acquireTimeout = config.defaultTimeout?.toLong()
 			if (config.expireTimeout)
-				expireTimeout = config.expireTimeout
+				expireTimeout = config.expireTimeout?.toLong()
 		}
 
 		this.configured = true
