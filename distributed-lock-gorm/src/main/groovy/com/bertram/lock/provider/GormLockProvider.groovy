@@ -112,24 +112,14 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 						Long now = new Date().time
 						String keyName = buildKey(name,ns)
 						DistributedLock.withNewTransaction { tx ->
-							def lockRow = DistributedLock.executeQuery("select d.value from DistributedLock d where d.name = :name AND (d.timeout IS NULL OR d.timeout >= :date)",[name: buildKey(name,ns),date: now])
-							def lockValue = lockRow ? lockRow.first() : null
-							
-							def val = lockValue
-							if(val && id && val != id) {
-								log.warn("Someone else has the lock ${name}")
-								return false
+							if(id) {
+								def tmpId = id
+								DistributedLock.where{name == keyName && value == tmpId}.deleteAll()
+								releaseLocalLock(name,id,args)
+							} else {
+								DistributedLock.where{name == keyName}.deleteAll()
+								releaseLocalLock(name,null,args)
 							}
-
-							if (!lockValue) {
-								log.info("Unable to find lock ${buildKey(name, ns)} to release")
-								releaseLocalLock(name,val,args)
-
-								return true
-							}
-
-							DistributedLock.where{name == keyName}.deleteAll()
-							releaseLocalLock(name,val,args)
 							return true
 						}
 					}.get()
