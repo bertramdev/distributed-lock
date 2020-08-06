@@ -24,6 +24,10 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 		def keyValue = java.util.UUID.randomUUID()?.toString()
 		def ns = args?.namespace
 		def expires = args?.ttl == null ? this.expireTimeout : args.ttl
+		Boolean cache = true
+		if(args?.cache == false) {
+			cache = false
+		}
 		try {
 			while (timeout > 0 || indefinite) {
 				log.debug("Making Lock Attempt ${buildKey(name, ns)} ${keyValue}")
@@ -46,7 +50,13 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 								if(count > 0) {
 									return false
 								}
-								def localLocked = acquireLocalLock(name,keyValue,args)
+								def localLocked
+								if(!cache) {
+									localLocked = true
+								} else {
+									localLocked = acquireLocalLock(name,keyValue,args)
+								}
+								
 								if(localLocked) {
 									try {
 										def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
