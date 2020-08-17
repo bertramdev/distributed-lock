@@ -4,6 +4,11 @@ class DistributedLock {
 	String name
 	String value
 	Long timeout //epoch timeout
+
+	static mapping = {
+		timeout index:true
+		value index:true
+	}
     static constraints = {
     	name unique:true, nullable:false
     	value nullable:true

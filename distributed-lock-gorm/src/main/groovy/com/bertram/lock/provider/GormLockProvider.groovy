@@ -37,19 +37,21 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 					def lockAcquired = Promises.tasks {
 						def now = new Date().time
 						DistributedLock.withNewSession { session ->
-							DistributedLock.withNewTransaction { tx ->
-								def localLock = checkLocalLock(name,args)
-								if(localLock) {
-									log.debug("local lock detected")
-									//still locked, no need to even check right now
-									return false
-								}
-
+							def localLock = checkLocalLock(name,args)
+							if(localLock) {
+								log.debug("local lock detected")
+								//still locked, no need to even check right now
+								return false
+							}	
+							DistributedLock.withNewTransaction { tx2 ->
 								DistributedLock.where{name == buildKey(name,ns) && timeout < now}.deleteAll()
-								def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
-								if(count > 0) {
-									return false
-								}
+							}
+							def count = DistributedLock.executeQuery("select count(*) from DistributedLock d where d.name = :name",[name:buildKey(name,ns)]).first()
+							if(count > 0) {
+								return false
+							}
+							DistributedLock.withNewTransaction { tx ->
+								
 								def localLocked
 								if(!cache) {
 									localLocked = true
