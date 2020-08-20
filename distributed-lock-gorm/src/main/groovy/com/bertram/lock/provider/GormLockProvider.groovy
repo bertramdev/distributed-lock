@@ -63,7 +63,9 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 									try {
 										def lock = new DistributedLock(name:buildKey(name,ns), value: keyValue,timeout: now + expires)
 										lock.save(flush:true,failOnError:true)
-										return true		
+										return true
+									} catch(IllegalStateException ise) {		
+										throw new IllegalStateException(ise)
 									} catch(ex2) {
 										log.debug("Error Creating Local Lock: ${ex2.message}",ex2)
 										releaseLocalLock(name,keyValue,args)
@@ -86,6 +88,11 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 					} else {
 						return keyValue
 					}
+				} catch(InterruptedException ie) {
+					Thread.currentThread().interrupt();
+		  			throw new InterruptedException();
+				} catch(IllegalStateException ise2) {
+					throw new IllegalStateException(ise2)
 				} catch(ex) {
 					// Possible duplicate lock exception
 					log.debug("Lock Acquired by someone else, waiting to try again...")
@@ -95,8 +102,12 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 				}
 			}
 			log.error("Unable to acquire lock for ${name}: acquire timeout expired.")			
-		}
-		catch (Throwable t) {
+		} catch(IllegalStateException ise3) {
+			throw new IllegalStateException(ise3)
+		} catch(InterruptedException ie) {
+			Thread.currentThread().interrupt();
+  			throw new InterruptedException();
+		} catch (Throwable t) {
 			log.error("Lock acquire hard failed: ${t.message}", t)
 			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
 				throw t
@@ -145,8 +156,12 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 					else {
 						return true
 					}
-				}
-				catch (Throwable t){
+				} catch(InterruptedException ie) {
+					Thread.currentThread().interrupt();
+  					throw new InterruptedException();
+				} catch(IllegalStateException ise3) {
+					throw new IllegalStateException(ise3)
+				} catch (Throwable t){
 					// possible db exceptions, make sure to retry until timeout
 					log.info("Failed to acquire lock: ${t.message}")
 					def randomTimeout = 250 + (int)(Math.random() * 1000)
@@ -160,8 +175,12 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 				throw new RuntimeException("Timeout expired while trying to release lock ${buildKey(name, ns)}")
 			else
 				return false
-		}
-		catch(Throwable t) {
+		} catch(InterruptedException ie) {
+			Thread.currentThread().interrupt();
+  			throw new InterruptedException();
+		} catch(IllegalStateException ise3) {
+					throw new IllegalStateException(ise3)
+		} catch(Throwable t) {
 			log.error("Unable to release lock ${name}: ${t.message}", t)
 			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
 				throw t
@@ -200,9 +219,12 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 			} else {
 				return result?.value	
 			}
-			
-		}
-		catch(Throwable t) {
+		} catch(InterruptedException ie) {
+			Thread.currentThread().interrupt();
+  			throw new InterruptedException();
+		} catch(IllegalStateException ise3) {
+			throw new IllegalStateException(ise3)	
+		} catch(Throwable t) {
 			log.error("Unable to check for lock ${name}: ${t.message}", t)
 			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
 				throw t
@@ -246,6 +268,11 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 				}
 			}.get()
 			return result
+		} catch(InterruptedException ie) {
+			Thread.currentThread().interrupt();
+  			throw new InterruptedException();
+		} catch(IllegalStateException ise3) {
+			throw new IllegalStateException(ise3)
 		} catch (Throwable t) {
 			log.error("Unable to renew lock ${name}: ${t.message}", t)
 			if ((args?.raiseError != null ? args.raiseError :this.raiseError))
@@ -265,8 +292,12 @@ public class GormLockProvider extends com.bertram.lock.provider.LockProvider {
 					return DistributedLock.executeQuery("select name from DistributedLock distributedlock where distributedlock.name like ${namespace + '.%'} distributedlock.timeout IS NULL OR distributedlock.timeout < ${new Date().time}")
 				}
 			}.get()
-		}
-		catch (Throwable t) {
+		} catch(InterruptedException ie) {
+			Thread.currentThread().interrupt();
+  			throw new InterruptedException();
+		} catch(IllegalStateException ise3) {
+				throw new IllegalStateException(ise3)
+		} catch (Throwable t) {
 			log.error("Unable to get active locks: ${t.message}", t)
 			throw t
 		}
