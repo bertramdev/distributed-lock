@@ -1,6 +1,7 @@
 package com.bertram.lock
 
 import grails.plugins.*
+import grails.util.Environment
 
 class DistributedLockGormGrailsPlugin extends Plugin {
 
@@ -52,6 +53,17 @@ easier by providing a simple service to facilitate this, as well as defining an 
         // TODO Implement code that is executed when any artefact that this plugin is
         // watching is modified and reloaded. The event contains: event.source,
         // event.application, event.manager, event.ctx, and event.plugin.
+    }
+
+
+    void onStartup(Map<String, Object> event) {
+        if(Environment.isDevelopmentMode()) {
+            DistributedLock.withNewTransaction { tx ->
+                DistributedLock.list().each { dl ->
+                    dl.delete(flush:true)
+                }
+            }
+        }
     }
 
     void onConfigChange(Map<String, Object> event) {

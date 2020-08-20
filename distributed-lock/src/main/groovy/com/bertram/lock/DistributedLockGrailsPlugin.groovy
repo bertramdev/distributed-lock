@@ -3,6 +3,7 @@ package com.bertram.lock
 import grails.plugins.*
 import com.bertram.lock.conf.LockServiceConfigurer
 
+
 class DistributedLockGrailsPlugin extends Plugin {
 
     // the version or versions of Grails the plugin is designed for
