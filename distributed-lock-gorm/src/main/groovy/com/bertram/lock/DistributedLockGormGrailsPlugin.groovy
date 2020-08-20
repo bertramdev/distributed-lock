@@ -57,13 +57,7 @@ easier by providing a simple service to facilitate this, as well as defining an 
 
 
     void onStartup(Map<String, Object> event) {
-        if(Environment.isDevelopmentMode()) {
-            DistributedLock.withNewTransaction { tx ->
-                DistributedLock.list().each { dl ->
-                    dl.delete(flush:true)
-                }
-            }
-        }
+        
     }
 
     void onConfigChange(Map<String, Object> event) {
