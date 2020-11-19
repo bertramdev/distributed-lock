@@ -8,11 +8,14 @@ class DistributedLockBootStrap {
 
     def init = { servletContext ->
     	if(Environment.isDevelopmentMode()) {
-            DistributedLock.withNewTransaction { tx ->
-                DistributedLock.list().each { dl ->
-                    dl.delete(flush:true)
-                }
+            try {
+                DistributedLock.withNewTransaction { tx ->
+                    DistributedLock.executeUpdate('delete from DistributedLock')
+                }    
+            } catch(ex) {
+                log.error("Error Flushing Dev Mode Locks: ${ex.message}",ex)
             }
+            
         }
     }
     def destroy = {
