@@ -41,7 +41,7 @@ dependencies {
 
     console "org.grails:grails-console"
 
-    implementation 'org.grails.plugins:redis:2.0.5'
+    compileOnly 'org.grails.plugins:redis:2.0.5'
     testCompile 'org.grails.plugins:redis:2.0.5'
     testCompile "org.grails:grails-gorm-testing-support"
     testCompile "org.mockito:mockito-core"
