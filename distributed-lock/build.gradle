@@ -9,34 +9,39 @@ buildscript {
     }
 }
 
-plugins {
-    id "com.jfrog.bintray" version "1.6"
-}
-
 group "com.bertramlabs.plugins"
 
 apply plugin:"eclipse"
 apply plugin:"idea"
+apply plugin:"java-library"
 apply plugin:"org.grails.grails-plugin"
-apply plugin:"org.grails.grails-plugin-publish"
+apply plugin:"maven-publish"
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
 
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
-    provided 'org.springframework.boot:spring-boot-starter-logging'
-    provided "org.springframework.boot:spring-boot-starter-actuator"
-    provided "org.springframework.boot:spring-boot-autoconfigure"
-    provided "org.springframework.boot:spring-boot-starter-tomcat"
-    provided "org.grails:grails-web-boot"
-    provided "org.grails:grails-dependencies"
-    provided 'javax.servlet:javax.servlet-api:3.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-autoconfigure"
+    implementation "org.springframework.boot:spring-boot-starter-tomcat"
+    implementation "org.grails:grails-web-boot"
+    implementation "org.grails:grails-dependencies"
+    implementation 'javax.servlet:javax.servlet-api:3.1.0'
 
     console "org.grails:grails-console"
 
-    compileOnly 'org.grails.plugins:redis:2.0.5'
+    implementation 'org.grails.plugins:redis:2.0.5'
     testCompile 'org.grails.plugins:redis:2.0.5'
     testCompile "org.grails:grails-gorm-testing-support"
     testCompile "org.mockito:mockito-core"
@@ -45,33 +50,77 @@ dependencies {
 
 }
 
-bintray {
-    publications = ['maven']
-    pkg {
-        githubRepo = 'bertramdev/distributed-lock' //Optional Github repository
-        githubReleaseNotesFile = 'README.md' //Optional Github readme file
-        repo = 'grails3-plugins'
-        userOrg = 'bertramlabs'
-        licenses = ['Apache-2.0']
-    }
-}
 
-grailsPublish {
-  if(project.hasProperty('bintrayUser')) {
-    user = bintrayUser
-    key = bintrayKey
-  }
-  userOrg = 'bertramlabs'
-    githubSlug = 'bertramdev/distributed-lock'
-    license {
-        name = 'Apache-2.0'
-    }
-    title = "Distributed Lock"
-    desc = """This plugin provides a framework and interface for a synchronization mechanism distributed to multiple server instances.  In today's world of horizontal computational
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId 'distributed-lock'
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name 'Distributed Lock'
+                    description """This plugin provides a framework and interface for a synchronization mechanism distributed to multiple server instances.  In today's world of horizontal computational
 scale and massive concurrency, it becomes increasingly difficult to synchronize operations outside the context of a single computational space (server/process).  This plugin aims to make that
 easier by providing a simple service to facilitate this, as well as defining an interface for adding low level providers.
 """
-    developers = [jsaardchit: "Jordon Saardchit", davydotcom: "David Estes"]
+                    url 'https://github.com/bertramdev/distributed-lock'
+                    scm {
+                        url 'https://github.com/bertramdev/distributed-lock'
+                        connection 'scm:https://bertramdev@github.com/bertramdev/distributed-lock.git'
+                        developerConnection 'scm:git://github.com/bertramdev/distributed-lock.git'
+                    }
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'jsaardchit'
+                            name 'Jordon Saardchit'
+                            email 'jsaardchit@bcap.com'
+                        }
+                        developer {
+                            id 'davydotcom'
+                            name 'David Estes'
+                            email 'davydotcom@gmail.com'
+                        }
+                    }
+                }
+            }
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            if( !isReleaseVersion ) {
+                url = "http://nexus.bertramlabs.com/content/repositories/snapshots"
+                if(project.hasProperty('labsNexusUser')) {
+                    credentials {
+                        username = labsNexusUser
+                        password = labsNexusPassword
+                    }
+                }
+            }
+        }
+    }
 }
+
+// grailsPublish {
+  
+//   userOrg = 'bertramlabs'
+//     githubSlug = 'bertramdev/distributed-lock'
+//     license {
+//         name = 'Apache-2.0'
+//     }
+//     title = "Distributed Lock"
+//     desc = """This plugin provides a framework and interface for a synchronization mechanism distributed to multiple server instances.  In today's world of horizontal computational
+// scale and massive concurrency, it becomes increasingly difficult to synchronize operations outside the context of a single computational space (server/process).  This plugin aims to make that
+// easier by providing a simple service to facilitate this, as well as defining an interface for adding low level providers.
+// """
+//     developers = [jsaardchit: "Jordon Saardchit", davydotcom: "David Estes"]
+// }
 
 

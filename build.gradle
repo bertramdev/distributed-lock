@@ -1,38 +1,86 @@
 buildscript {
 	repositories {
 		mavenLocal()
-		jcenter()
+		maven { url "https://plugins.gradle.org/m2/" }
 	}
 	dependencies {
+        classpath "io.github.gradle-nexus:publish-plugin:1.0.0"
 	}
 }
 
-subprojects {
-	version = '4.0.9'
+plugins {
+    id 'signing'
 }
+
+group = 'com.bertramlabs.plugins'
+
+ext {
+    isBuildSnapshot = version.endsWith('-SNAPSHOT')
+    isReleaseVersion = !isBuildSnapshot
+}
+
+
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
 
-group = 'com.bertramlabs.plugins'
+if (isReleaseVersion) {
+    apply plugin: "io.github.gradle-nexus.publish-plugin"
+    nexusPublishing {
+        repositories {
+            sonatype {
+                if(project.hasProperty('mavenUser')) {
+                    username = mavenUser
+                    password = mavenPassword
+                }   
+            }
+        }
+    }
+} else {
+    publishing {
+        repositories {
+            maven {
+                url = "http://nexus.bertramlabs.com/content/repositories/snapshots"
+                if(project.hasProperty('labsNexusUser')) {
+                    credentials {
+                        username = labsNexusUser
+                        password = labsNexusPassword
+                    }
+                }
+            }
+        }
+    }
+}
+
+subprojects { project ->
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+    afterEvaluate {
+        signing {
+            required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+            sign publishing.publications.maven
+        }
+    }
+
+    tasks.withType(Sign) {
+        onlyIf { isReleaseVersion }
+    }
+
+    //do not generate extra load on Nexus with new staging repository if signing fails
+    tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
+        shouldRunAfter(tasks.withType(Sign))
+    }
+    
+}
+
+
 
 repositories {
-	jcenter()
 	mavenCentral()
 }
 
-// groovydoc {
-// 	groovyClasspath = configurations.doc
-// }
 
-dependencies {
-//	compile 'org.codehaus.groovy:groovy:2.5.6'
-//	compile 'org.codehaus.groovy:groovy-templates:2.0.7'
-//	compile 'org.mozilla:rhino:1.7R4'
-//	compile 'com.google.javascript:closure-compiler-unshaded:v20160315'
-//	compile 'commons-logging:commons-logging:1.1.1'
-//	testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-}
 
 test {
 	testLogging {
