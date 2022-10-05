@@ -2,6 +2,7 @@ package com.bertram.lock
 
 import com.bertram.lock.conf.LockServiceConfigurer
 import com.bertram.lock.provider.LockProvider
+import grails.async.Promises
 
 /**
  * Grails service that wraps a specific locking provider
@@ -123,6 +124,18 @@ class LockService implements GroovyInterceptable {
 	 */
 	def releaseLock(String name, Map params) {
 		return providerDelegate.releaseLock(name, params)
+	}
+
+	/**
+	 * Used to release an active lock
+	 * @param name
+	 * @param params
+	 * @return
+	 */
+	def asyncReleaseLock(String name, Map params) {
+		Promises.task {
+			return providerDelegate.releaseLock(name, params)	
+		}
 	}
 
 	/**
